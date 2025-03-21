@@ -14,7 +14,7 @@
 
 ## 설치 방법
 
-1. 이 저장소를 다운로드하거나 클론합니다.
+1. 이 저장소를 [다운로드](https://github.com/Nabi-Yi/hs-chzzk-deck-tracker-chorome-extension/archive/refs/heads/main.zip)하거나 클론합니다.
 2. 크롬 브라우저에서 `chrome://extensions` 주소로 이동합니다.
 3. 우측 상단의 '개발자 모드'를 활성화합니다.
 4. '압축해제된 확장 프로그램 로드' 버튼을 클릭합니다.
