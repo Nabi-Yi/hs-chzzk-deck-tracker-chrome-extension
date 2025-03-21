@@ -14,7 +14,7 @@
 
 ## 설치 방법
 
-1. 이 저장소를 다운로드하거나 클론합니다.
+1. 이 저장소를 [다운로드](https://github.com/Nabi-Yi/hs-chzzk-deck-tracker-chorome-extension/archive/refs/heads/main.zip)하거나 클론합니다.
 2. 크롬 브라우저에서 `chrome://extensions` 주소로 이동합니다.
 3. 우측 상단의 '개발자 모드'를 활성화합니다.
 4. '압축해제된 확장 프로그램 로드' 버튼을 클릭합니다.
@@ -29,6 +29,12 @@
 5. 창 하단의 리사이즈 핸들을 통해 창 크기를 조절할 수 있습니다.
 6. 카드에 마우스를 올리면 전체 카드 이미지를 확인할 수 있습니다.
 7. 각 창의 우측 상단 'X' 버튼으로 개별 창을 닫을 수 있습니다.
+
+## [스트리머용 프로그램](https://github.com/Nabi-Yi/hs-chzzk-deck-tracker-streamer-client)(로그 연동)
+
+- 이전 트위치 연동처럼 스트리머분들의 로그 연동을 위한 전용 프로그램입니다.
+- 사용을 원하실 경우 nabiyi926@gmail.com 으로 문의 주시면 확인 후 API키와 프로그램 함께 전달 드리고 있습니다.
+
 
 ## 주의사항
 
