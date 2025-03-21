@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "치지직 하스스톤 덱 트래커",
   "version": "1.0",
-  "description": "치지직 하스스톤 덱 트래커 - 내 카드 목록과 상대방 카드 목록을 표시합니다.",
+  "description": "치지직 하스스톤 덱 트래커 - 내 카드 목록과 상대방 카드 목록과 정보를 표시합니다.",
   "permissions": ["activeTab", "scripting"],
   "action": {
     "default_popup": "popup.html",
