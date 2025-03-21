@@ -1,0 +1,170 @@
+#draggable-buttons-container {
+  transition: opacity 0.3s ease;
+}
+
+.panel-wrapper {
+  position: fixed;
+  z-index: 9999;
+  margin-bottom: 10px;
+  cursor: move;
+}
+
+.draggable-panel {
+  transition: all 0.2s ease;
+  cursor: default;
+  width: 200px;
+  height: 150px;
+}
+
+.draggable-panel:hover {
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.panel-content {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.panel-content ul {
+  list-style: disc;
+  padding-left: 20px;
+}
+
+.panel-content li {
+  margin-bottom: 5px;
+}
+
+.card-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  z-index: 50000;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  width: 243px;
+  height: 88vh;
+}
+
+.enemy-container {
+  left: auto;
+  right: 20px;
+}
+
+.drag-handle {
+  width: 100%;
+  height: 20px;
+  background-color: rgba(0, 0, 0, 0.3);
+  cursor: move;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.drag-handle span {
+  color: white;
+  font-size: 12px;
+}
+
+.cards-wrapper {
+  overflow-y: auto;
+  flex: 1;
+  max-height: 88vh;
+}
+
+.card-element {
+  width: 243px;
+  height: 64px;
+  position: relative;
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: none;
+  cursor: pointer;
+  flex-shrink: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+.card-name {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  min-width: 50%;
+  height: 100%;
+  padding-right: 15px;
+  padding-left: 15px;
+  background-color: transparent;
+  background-image: linear-gradient(to right, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+  color: white;
+  text-align: left;
+  font-size: 14px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.full-image {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 400px;
+  height: 533px;
+  background-size: cover;
+  background-position: center;
+  z-index: 10000;
+  display: none;
+}
+
+#cards-container-main .full-image {
+  left: 250px;
+}
+
+#enemy-cards-container-main .full-image {
+  right: 250px;
+}
+
+.resize-handle {
+  width: 100%;
+  height: 10px;
+  background-color: rgba(0, 0, 0, 0.3);
+  cursor: ns-resize;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  position: relative;
+  z-index: 50001;
+}
+
+.resize-handle:hover {
+  background-color: rgba(0, 0, 0, 0.6);
+  height: 12px;
+}
+
+.resize-handle::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 30px;
+  height: 3px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border-radius: 2px;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 18px;
+  cursor: pointer;
+  float: right;
+  margin-right: 5px;
+  margin-left: 10px;
+}

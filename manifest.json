@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "치지직 하스스톤 덱 트래커",
+  "version": "1.0",
+  "description": "치지직 하스스톤 덱 트래커 - 내 카드 목록과 상대방 카드 목록을 표시합니다.",
+  "permissions": ["activeTab", "scripting"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "images/icon16.png",
+      "48": "images/icon48.png",
+      "128": "images/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://chzzk.naver.com/live/*"],
+      "js": ["content.js"],
+      "css": ["styles.css"]
+    }
+  ],
+  "icons": {
+    "16": "images/icon16.png",
+    "48": "images/icon48.png",
+    "128": "images/icon128.png"
+  }
+}
