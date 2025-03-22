@@ -10,6 +10,7 @@ class CardManager {
   static enemyCardList = []
   static currentStreamerId = ''
   static streamerList = []
+  static autoFetcherId = null
   // HTML 템플릿 - 컨테이너 구조 정의
   static CONTAINER_TEMPLATE = `
     <div id="hs-chzzk-cards-container-main" class="hs-chzzk-card-container">
@@ -49,10 +50,9 @@ class CardManager {
     this.streamerList = await this.getStreamerList()
     this.currentStreamerId = window.location.pathname.split('/').pop()
 
-    if (this.checkStreamerList(this.streamerList)) {
+    if (this.checkStreamerList(this.currentStreamerId)) {
       this.displayCards()
       this.displayEnemyCards()
-      // 5초마다 데이터 가져오기 시작
       this.startDataFetching()
     }
 
@@ -91,7 +91,7 @@ class CardManager {
       }
 
       // 지원되는 스트리머인지 확인
-      if (this.checkStreamerList(this.streamerList)) {
+      if (this.checkStreamerList(newStreamerId)) {
         // 지원되는 스트리머면 카드 표시
         this.displayCards()
         this.displayEnemyCards()
@@ -99,6 +99,7 @@ class CardManager {
       } else {
         // 지원되지 않는 스트리머면 카드 컨테이너 제거
         this.removeCardContainers()
+        this.stopDataFetching()
       }
     }
   }
@@ -133,13 +134,12 @@ class CardManager {
     }
   }
 
-  static checkStreamerList(streamerList) {
-    if (streamerList.length === 0) {
+  static checkStreamerList(streamerId) {
+    if (this.streamerList.length === 0) {
       console.error('스트리머 목록이 없습니다')
       return false
     }
-    const streamerId = window.location.pathname.split('/').pop()
-    if (!streamerList.map(s => s.streamerId).includes(streamerId)) {
+    if (!this.streamerList.map(s => s.streamerId).includes(streamerId)) {
       console.error('하스스톤 덱트래커 지원 스트리머 목록에 없는 스트리머입니다')
       return false
     }
@@ -152,9 +152,16 @@ class CardManager {
     this.updateCardData()
 
     // 5초마다 반복 실행
-    setInterval(() => {
+    this.autoFetcherId = setInterval(() => {
       this.updateCardData()
     }, 5000)
+  }
+
+  static stopDataFetching() {
+    if (this.autoFetcherId) {
+      clearInterval(this.autoFetcherId)
+      this.autoFetcherId = null
+    }
   }
 
   // 카드 데이터 업데이트 함수
