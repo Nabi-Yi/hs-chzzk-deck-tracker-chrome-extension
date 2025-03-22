@@ -170,3 +170,36 @@
   margin-right: 5px;
   margin-left: 10px;
 }
+
+/* 카드 비용을 위한 스타일 */
+.hs-chzzk-card-cost {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 24px;
+  height: 28px;
+  background: radial-gradient(circle at 30% 30%, #3f6fd6 0%, #0091ffc4 40%, #0063c9 100%);
+  color: white;
+  font-size: 16px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  z-index: 2;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+  box-shadow: inset 0 0 6px rgba(255, 255, 255, 0.8), 0 0 8px rgba(0, 145, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  text-shadow: 0 0 4px #fff, 0 0 2px #000;
+  animation: crystal-shine 5s infinite;
+}
+
+@keyframes crystal-shine {
+  0%,
+  100% {
+    filter: brightness(0.9);
+  }
+  50% {
+    filter: brightness(1);
+  }
+}

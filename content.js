@@ -338,6 +338,14 @@ class CardManager {
       nameElement.className = 'hs-chzzk-card-name'
       nameElement.textContent = card.count > 1 ? `${card.name} (${card.count})` : card.name
 
+      // 비용 표시
+      if (card.cost !== undefined) {
+        const costElement = document.createElement('div')
+        costElement.className = 'hs-chzzk-card-cost'
+        costElement.textContent = card.cost
+        cardElement.appendChild(costElement)
+      }
+
       // 마우스 호버 시 전체 이미지 표시
       const fullImageElement = document.createElement('div')
       fullImageElement.className = 'hs-chzzk-full-image'
@@ -430,6 +438,14 @@ class CardManager {
       const nameElement = document.createElement('div')
       nameElement.className = 'hs-chzzk-card-name'
       nameElement.textContent = card.count > 1 ? `${card.name} (${card.count})` : card.name
+
+      // 비용 표시
+      if (card.cost !== undefined) {
+        const costElement = document.createElement('div')
+        costElement.className = 'hs-chzzk-card-cost'
+        costElement.textContent = card.cost
+        cardElement.appendChild(costElement)
+      }
 
       // 마우스 호버 시 전체 이미지 표시
       const fullImageElement = document.createElement('div')
