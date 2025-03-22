@@ -34,7 +34,7 @@
   margin-bottom: 5px;
 }
 
-.card-container {
+.hs-chzzk-card-container {
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -43,18 +43,17 @@
   top: 20px;
   left: 20px;
   z-index: 50000;
-  background-color: rgba(0, 0, 0, 0.1);
   border-radius: 4px;
   width: 243px;
   height: 88vh;
 }
 
-.enemy-container {
+.hs-chzzk-enemy-container {
   left: auto;
   right: 20px;
 }
 
-.drag-handle {
+.hs-chzzk-drag-handle {
   width: 100%;
   height: 20px;
   background-color: rgba(0, 0, 0, 0.3);
@@ -66,18 +65,21 @@
   align-items: center;
 }
 
-.drag-handle span {
+.hs-chzzk-drag-handle span {
   color: white;
   font-size: 12px;
 }
 
-.cards-wrapper {
+.hs-chzzk-cards-wrapper {
   overflow-y: auto;
+  overflow-x: hidden;
   flex: 1;
-  max-height: 88vh;
+  height: 100%;
+  max-height: 100%;
+  background-color: rgba(0, 0, 0, 0.75);
 }
 
-.card-element {
+.hs-chzzk-card-element {
   width: 243px;
   height: 64px;
   position: relative;
@@ -90,7 +92,7 @@
   background-position: center;
 }
 
-.card-name {
+.hs-chzzk-card-name {
   position: absolute;
   bottom: 0;
   left: 0;
@@ -110,7 +112,7 @@
   justify-content: flex-start;
 }
 
-.full-image {
+.hs-chzzk-full-image {
   position: fixed;
   top: 50%;
   transform: translateY(-50%);
@@ -122,15 +124,15 @@
   display: none;
 }
 
-#cards-container-main .full-image {
+#hs-chzzk-cards-container-main .hs-chzzk-full-image {
   left: 250px;
 }
 
-#enemy-cards-container-main .full-image {
+#hs-chzzk-enemy-cards-container-main .hs-chzzk-full-image {
   right: 250px;
 }
 
-.resize-handle {
+.hs-chzzk-resize-handle {
   width: 100%;
   height: 10px;
   background-color: rgba(0, 0, 0, 0.3);
@@ -141,12 +143,12 @@
   z-index: 50001;
 }
 
-.resize-handle:hover {
+.hs-chzzk-resize-handle:hover {
   background-color: rgba(0, 0, 0, 0.6);
   height: 12px;
 }
 
-.resize-handle::after {
+.hs-chzzk-resize-handle::after {
   content: '';
   position: absolute;
   left: 50%;
@@ -158,7 +160,7 @@
   border-radius: 2px;
 }
 
-.close-button {
+.hs-chzzk-close-button {
   background: none;
   border: none;
   color: white;

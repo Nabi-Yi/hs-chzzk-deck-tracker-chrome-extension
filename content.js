@@ -2,37 +2,40 @@
 class CardManager {
   // 정적 변수들
   static isDragging = false
-  static CONTAINER_ID = 'cards-container-main'
-  static ENEMY_CONTAINER_ID = 'enemy-cards-container-main'
-  static url = 'https://hs-chzzk-deck-tracker-server.vercel.app/api/deckTrace/관리자' // 테스트중
+  static CONTAINER_ID = 'hs-chzzk-cards-container-main'
+  static ENEMY_CONTAINER_ID = 'hs-chzzk-enemy-cards-container-main'
+  static streamerListUrl = 'https://hs-chzzk-deck-tracker-server.vercel.app/api/streamerList'
+  static baseUrl = 'https://hs-chzzk-deck-tracker-server.vercel.app/api/deckTrace'
   static playerCardList = []
   static enemyCardList = []
+  static currentStreamerId = ''
+  static streamerList = []
   // HTML 템플릿 - 컨테이너 구조 정의
   static CONTAINER_TEMPLATE = `
-    <div id="cards-container-main" class="card-container">
-      <div class="drag-handle">
+    <div id="hs-chzzk-cards-container-main" class="hs-chzzk-card-container">
+      <div class="hs-chzzk-drag-handle">
         <span>≡ 내 카드 목록</span>
-        <button class="close-button">×</button>
+        <button class="hs-chzzk-close-button">×</button>
       </div>
-      <div class="cards-wrapper"></div>
-      <div class="resize-handle"></div>
+      <div class="hs-chzzk-cards-wrapper"></div>
+      <div class="hs-chzzk-resize-handle"></div>
     </div>
   `
 
   // 적 카드 컨테이너 템플릿
   static ENEMY_CONTAINER_TEMPLATE = `
-    <div id="enemy-cards-container-main" class="card-container enemy-container">
-      <div class="drag-handle">
+    <div id="hs-chzzk-enemy-cards-container-main" class="hs-chzzk-card-container hs-chzzk-enemy-container">
+      <div class="hs-chzzk-drag-handle">
         <span>≡ 상대방 카드 목록</span>
-        <button class="close-button">×</button>
+        <button class="hs-chzzk-close-button">×</button>
       </div>
-      <div class="cards-wrapper"></div>
-      <div class="resize-handle"></div>
+      <div class="hs-chzzk-cards-wrapper"></div>
+      <div class="hs-chzzk-resize-handle"></div>
     </div>
   `
 
   // 초기화 함수 - 스타일 적용 및 이벤트 설정
-  static initialize() {
+  static async initialize() {
     // 스타일 추가
     if (!document.getElementById('card-manager-styles')) {
       const linkElement = document.createElement('link')
@@ -42,11 +45,105 @@ class CardManager {
       document.head.appendChild(linkElement)
     }
 
-    this.displayCards()
-    this.displayEnemyCards()
+    // 스트리머 목록 가져오기
+    this.streamerList = await this.getStreamerList()
+    this.currentStreamerId = window.location.pathname.split('/').pop()
 
-    // 5초마다 데이터 가져오기 시작
-    this.startDataFetching()
+    if (this.checkStreamerList(this.streamerList)) {
+      this.displayCards()
+      this.displayEnemyCards()
+      // 5초마다 데이터 가져오기 시작
+      this.startDataFetching()
+    }
+
+    // URL 변경 감지를 위한 MutationObserver 설정
+    this.setupUrlChangeDetection()
+  }
+
+  // URL 변경 감지 설정
+  static setupUrlChangeDetection() {
+    // 이전 URL 저장
+    let lastUrl = location.href
+
+    // URL 변경 확인 함수
+    const checkForUrlChange = () => {
+      if (lastUrl !== location.href) {
+        lastUrl = location.href
+        this.handleUrlChange()
+      }
+    }
+
+    // 주기적으로 URL 변경 확인
+    setInterval(checkForUrlChange, 1000)
+  }
+
+  // URL 변경 처리 함수
+  static async handleUrlChange() {
+    const newStreamerId = window.location.pathname.split('/').pop()
+
+    // streamerId가 변경된 경우에만 처리
+    if (this.currentStreamerId !== newStreamerId) {
+      this.currentStreamerId = newStreamerId
+
+      // streamerList가 비어있으면 다시 가져오기
+      if (this.streamerList.length === 0) {
+        this.streamerList = await this.getStreamerList()
+      }
+
+      // 지원되는 스트리머인지 확인
+      if (this.checkStreamerList(this.streamerList)) {
+        // 지원되는 스트리머면 카드 표시
+        this.displayCards()
+        this.displayEnemyCards()
+        this.startDataFetching()
+      } else {
+        // 지원되지 않는 스트리머면 카드 컨테이너 제거
+        this.removeCardContainers()
+      }
+    }
+  }
+
+  // 카드 컨테이너 제거 함수
+  static removeCardContainers() {
+    const playerContainer = document.getElementById(this.CONTAINER_ID)
+    const enemyContainer = document.getElementById(this.ENEMY_CONTAINER_ID)
+
+    if (playerContainer) {
+      playerContainer.remove()
+    }
+
+    if (enemyContainer) {
+      enemyContainer.remove()
+    }
+  }
+
+  // 스트리머 목록 가져오기
+  static async getStreamerList() {
+    try {
+      const response = await fetch(this.streamerListUrl)
+      if (!response.ok) {
+        console.error('스트리머 목록 가져오기 중 오류 발생:', response.statusText)
+        return []
+      }
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error('스트리머 목록 가져오기 중 오류 발생:', error)
+      return []
+    }
+  }
+
+  static checkStreamerList(streamerList) {
+    if (streamerList.length === 0) {
+      console.error('스트리머 목록이 없습니다')
+      return false
+    }
+    const streamerId = window.location.pathname.split('/').pop()
+    if (!streamerList.map(s => s.streamerId).includes(streamerId)) {
+      console.error('하스스톤 덱트래커 지원 스트리머 목록에 없는 스트리머입니다')
+      return false
+    }
+    return true
   }
 
   // 주기적으로 데이터를 가져오는 함수
@@ -62,7 +159,11 @@ class CardManager {
 
   // 카드 데이터 업데이트 함수
   static async updateCardData() {
-    const data = await this.fetchData(this.url)
+    if (!window || !window.location) return
+    const pathName = window.location.pathname
+    const streamerId = pathName.split('/').pop()
+    const url = `${this.baseUrl}/${streamerId}`
+    const data = await this.fetchData(url)
 
     // 에러가 발생하지 않은 경우에만 데이터 업데이트
     if (data !== null) {
@@ -198,9 +299,9 @@ class CardManager {
       document.body.appendChild(container)
 
       // 드래그 및 리사이즈 이벤트 설정
-      const dragHandle = container.querySelector('.drag-handle')
-      const resizeHandle = container.querySelector('.resize-handle')
-      const closeButton = container.querySelector('.close-button')
+      const dragHandle = container.querySelector('.hs-chzzk-drag-handle')
+      const resizeHandle = container.querySelector('.hs-chzzk-resize-handle')
+      const closeButton = container.querySelector('.hs-chzzk-close-button')
 
       this.makeDraggableContainer(container, dragHandle, this.CONTAINER_ID)
       this.makeResizable(container, resizeHandle, this.CONTAINER_ID)
@@ -216,23 +317,23 @@ class CardManager {
     container.style.display = isVisible ? 'block' : 'none'
 
     // 카드 컨테이너 초기화
-    const cardsWrapper = container.querySelector('.cards-wrapper')
+    const cardsWrapper = container.querySelector('.hs-chzzk-cards-wrapper')
     cardsWrapper.innerHTML = ''
 
     // 카드 엘리먼트 생성 및 추가
     uniqueCards.forEach(card => {
       const cardElement = document.createElement('div')
-      cardElement.className = 'card-element'
+      cardElement.className = 'hs-chzzk-card-element'
       cardElement.style.backgroundImage = `url(${card.thumbnail || ''})`
 
       // 카드 이름 표시
       const nameElement = document.createElement('div')
-      nameElement.className = 'card-name'
+      nameElement.className = 'hs-chzzk-card-name'
       nameElement.textContent = card.count > 1 ? `${card.name} (${card.count})` : card.name
 
       // 마우스 호버 시 전체 이미지 표시
       const fullImageElement = document.createElement('div')
-      fullImageElement.className = 'full-image'
+      fullImageElement.className = 'hs-chzzk-full-image'
       fullImageElement.style.backgroundImage = `url(${card.image})`
 
       cardElement.appendChild(nameElement)
@@ -291,9 +392,9 @@ class CardManager {
       document.body.appendChild(container)
 
       // 드래그 및 리사이즈 이벤트 설정
-      const dragHandle = container.querySelector('.drag-handle')
-      const resizeHandle = container.querySelector('.resize-handle')
-      const closeButton = container.querySelector('.close-button')
+      const dragHandle = container.querySelector('.hs-chzzk-drag-handle')
+      const resizeHandle = container.querySelector('.hs-chzzk-resize-handle')
+      const closeButton = container.querySelector('.hs-chzzk-close-button')
 
       this.makeDraggableContainer(container, dragHandle, this.ENEMY_CONTAINER_ID)
       this.makeResizable(container, resizeHandle, this.ENEMY_CONTAINER_ID)
@@ -309,23 +410,23 @@ class CardManager {
     container.style.display = isVisible ? 'block' : 'none'
 
     // 카드 컨테이너 초기화
-    const cardsWrapper = container.querySelector('.cards-wrapper')
+    const cardsWrapper = container.querySelector('.hs-chzzk-cards-wrapper')
     cardsWrapper.innerHTML = ''
 
     // 카드 엘리먼트 생성 및 추가
     uniqueCards.forEach(card => {
       const cardElement = document.createElement('div')
-      cardElement.className = 'card-element'
+      cardElement.className = 'hs-chzzk-card-element'
       cardElement.style.backgroundImage = `url(${card.thumbnail || ''})`
 
       // 카드 이름 표시
       const nameElement = document.createElement('div')
-      nameElement.className = 'card-name'
+      nameElement.className = 'hs-chzzk-card-name'
       nameElement.textContent = card.count > 1 ? `${card.name} (${card.count})` : card.name
 
       // 마우스 호버 시 전체 이미지 표시
       const fullImageElement = document.createElement('div')
-      fullImageElement.className = 'full-image'
+      fullImageElement.className = 'hs-chzzk-full-image'
       fullImageElement.style.backgroundImage = `url(${card.image})`
 
       cardElement.appendChild(nameElement)
@@ -382,10 +483,12 @@ class CardManager {
       document.removeEventListener('mousemove', elementDrag)
       document.removeEventListener('mouseup', closeDragElement)
 
+      element.style.top = element.style.top < '1x' ? '1px' : element.style.top
+
       // 드래그 완료 후 설정 저장
       if (containerId) {
         CardManager.saveContainerSettings(containerId, {
-          top: element.style.top < '10px' ? '10px' : element.style.top,
+          top: element.style.top < '1px' ? '1px' : element.style.top,
           left: element.style.left,
           height: element.style.height,
         })
@@ -412,12 +515,15 @@ class CardManager {
       if (!CardManager.isDragging) return
       e.preventDefault()
       e.stopPropagation() // 이벤트 버블링 방지
-      const newHeight = Math.max(100, startHeight + e.clientY - startY)
+      const maxHeight = window.innerHeight * 0.95
+      let newHeight = Math.max(100, startHeight + e.clientY - startY)
+      newHeight = Math.min(newHeight, maxHeight)
+
       element.style.height = newHeight + 'px'
       // 컨텐츠 영역 크기 조정
-      const cardsWrapper = element.querySelector('.cards-wrapper')
+      const cardsWrapper = element.querySelector('.hs-chzzk-cards-wrapper')
       if (cardsWrapper) {
-        cardsWrapper.style.maxHeight = newHeight - 30 + 'px' // 드래그 핸들과 리사이즈 핸들 높이 고려
+        cardsWrapper.style.height = newHeight - 30 + 'px' // 드래그 핸들과 리사이즈 핸들 높이 고려
       }
     }
 

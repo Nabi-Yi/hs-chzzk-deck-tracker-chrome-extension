@@ -8,7 +8,22 @@ document.addEventListener('DOMContentLoaded', function () {
       })
     })
   })
+
+  document.getElementById('resetSettings').addEventListener('click', function () {
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      chrome.scripting.executeScript({
+        target: { tabId: tabs[0].id },
+        function: resetSettings,
+      })
+    })
+  })
 })
+
+function resetSettings() {
+  localStorage.removeItem('cardContainerSettings')
+  localStorage.removeItem('containerVisibility')
+  window.location.reload()
+}
 
 // 페이지에서 실행되는 함수 - 모든 카드 창을 동시에 토글
 function toggleAllCardContainers() {
