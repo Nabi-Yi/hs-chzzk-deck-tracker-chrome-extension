@@ -50,39 +50,48 @@ class CardManager {
     this.streamerList = await this.getStreamerList()
     this.currentStreamerId = window.location.pathname.split('/').pop()
 
-    if (this.checkStreamerList(this.currentStreamerId)) {
+    if (this.checkStreamerList(this.currentStreamerId) && this.checkCategory()) {
       this.displayCards()
       this.displayEnemyCards()
       this.startDataFetching()
     }
 
     // URL 변경 감지를 위한 MutationObserver 설정
-    this.setupUrlChangeDetection()
+    this.setupUrlAndCategoryChangeDetection()
+  }
+
+  static checkCategory() {
+    const aList = document.querySelectorAll('a')
+    const hearthCategory = Array.from(aList).find(a => a.href.includes('/category/GAME/Hearthstone/lives'))
+    if (hearthCategory) return true
+    return false
   }
 
   // URL 변경 감지 설정
-  static setupUrlChangeDetection() {
+  static setupUrlAndCategoryChangeDetection() {
     // 이전 URL 저장
     let lastUrl = location.href
+    let isCategoryChecked = this.checkCategory()
 
     // URL 변경 확인 함수
-    const checkForUrlChange = () => {
-      if (lastUrl !== location.href) {
+    const checkForUrlAndCategoryChange = () => {
+      if (lastUrl !== location.href || isCategoryChecked !== this.checkCategory()) {
         lastUrl = location.href
-        this.handleUrlChange()
+        isCategoryChecked = this.checkCategory()
+        this.handleUrlAndCategoryChange()
       }
     }
 
     // 주기적으로 URL 변경 확인
-    setInterval(checkForUrlChange, 1000)
+    setInterval(checkForUrlAndCategoryChange, 1000)
   }
 
   // URL 변경 처리 함수
-  static async handleUrlChange() {
+  static async handleUrlAndCategoryChange() {
     const newStreamerId = window.location.pathname.split('/').pop()
 
     // streamerId가 변경된 경우에만 처리
-    if (this.currentStreamerId !== newStreamerId) {
+    if (this.currentStreamerId !== newStreamerId || this.checkCategory()) {
       this.currentStreamerId = newStreamerId
 
       // streamerList가 비어있으면 다시 가져오기
@@ -92,12 +101,12 @@ class CardManager {
 
       // 지원되는 스트리머인지 확인
       if (this.checkStreamerList(newStreamerId)) {
-        // 지원되는 스트리머면 카드 표시
+        // 지원되는 스트리머이고 카테고리가 하스스톤이면 카드 표시
         this.displayCards()
         this.displayEnemyCards()
         this.startDataFetching()
       } else {
-        // 지원되지 않는 스트리머면 카드 컨테이너 제거
+        // 지원되지 않는 스트리머거나 카테고리가 하스스톤이 아니면 카드 컨테이너 제거
         this.removeCardContainers()
         this.stopDataFetching()
       }
@@ -261,7 +270,7 @@ class CardManager {
       const { playerCardList, enemyCardList } = data
       return { playerCardList, enemyCardList }
     } catch (error) {
-      console.error('데이터를 가져오는 중 오류 발생:', error)
+      console.log('데이터를 가져오는 중 오류 발생:', error)
       return null
     }
   }
