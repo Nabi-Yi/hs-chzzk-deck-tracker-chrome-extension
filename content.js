@@ -140,7 +140,7 @@ class CardManager {
       return false
     }
     if (!this.streamerList.map(s => s.streamerId).includes(streamerId)) {
-      console.error('하스스톤 덱트래커 지원 스트리머 목록에 없는 스트리머입니다')
+      console.log('하스스톤 덱트래커 지원 스트리머 목록에 없는 스트리머입니다')
       return false
     }
     return true
