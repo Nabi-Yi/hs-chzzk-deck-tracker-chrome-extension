@@ -11,6 +11,7 @@ class CardManager {
   static currentStreamerId = ''
   static streamerList = []
   static autoFetcherId = null
+  static isBigCard = false // 카드 크기 상태 추가
   // HTML 템플릿 - 컨테이너 구조 정의
   static CONTAINER_TEMPLATE = `
     <div id="hs-chzzk-cards-container-main" class="hs-chzzk-card-container">
@@ -20,6 +21,7 @@ class CardManager {
       </div>
       <div class="hs-chzzk-cards-wrapper"></div>
       <div class="hs-chzzk-resize-handle"></div>
+      <div class="hs-chzzk-resize-handle-horizontal"></div>
     </div>
   `
 
@@ -32,6 +34,7 @@ class CardManager {
       </div>
       <div class="hs-chzzk-cards-wrapper"></div>
       <div class="hs-chzzk-resize-handle"></div>
+      <div class="hs-chzzk-resize-handle-horizontal"></div>
     </div>
   `
 
@@ -58,6 +61,41 @@ class CardManager {
 
     // URL 변경 감지를 위한 MutationObserver 설정
     this.setupUrlAndCategoryChangeDetection()
+
+    // 카드 크기 상태 로드
+    this.isBigCard = this.loadCardSizeState()
+  }
+
+  // 컨테이너 투명도 설정 함수
+  static setContainerOpacity(containerId, opacity) {
+    const container = document.getElementById(containerId)
+    if (container) {
+      container.style.opacity = opacity
+      this.saveContainerOpacity(containerId, opacity)
+    }
+  }
+
+  // 컨테이너 투명도 저장 함수
+  static saveContainerOpacity(containerId, opacity) {
+    try {
+      const opacitySettings = JSON.parse(localStorage.getItem('containerOpacity')) || {}
+      opacitySettings[containerId] = opacity
+      localStorage.setItem('containerOpacity', JSON.stringify(opacitySettings))
+      console.log(`컨테이너 투명도 설정 저장됨: ${containerId}`, opacity)
+    } catch (error) {
+      console.error('투명도 설정 저장 중 오류 발생:', error)
+    }
+  }
+
+  // 컨테이너 투명도 로드 함수
+  static getContainerOpacity(containerId) {
+    try {
+      const opacitySettings = JSON.parse(localStorage.getItem('containerOpacity')) || {}
+      return opacitySettings[containerId] !== undefined ? opacitySettings[containerId] : 1
+    } catch (error) {
+      console.error('투명도 설정 로드 중 오류 발생:', error)
+      return 1
+    }
   }
 
   static checkCategory() {
@@ -309,6 +347,7 @@ class CardManager {
         if (savedSettings.top) container.style.top = savedSettings.top
         if (savedSettings.left) container.style.left = savedSettings.left
         if (savedSettings.height) container.style.height = savedSettings.height
+        if (savedSettings.width) container.style.width = savedSettings.width
       }
 
       // 문서에 컨테이너 추가
@@ -317,10 +356,12 @@ class CardManager {
       // 드래그 및 리사이즈 이벤트 설정
       const dragHandle = container.querySelector('.hs-chzzk-drag-handle')
       const resizeHandle = container.querySelector('.hs-chzzk-resize-handle')
+      const resizeHandleHorizontal = container.querySelector('.hs-chzzk-resize-handle-horizontal')
       const closeButton = container.querySelector('.hs-chzzk-close-button')
 
       this.makeDraggableContainer(container, dragHandle, this.CONTAINER_ID)
       this.makeResizable(container, resizeHandle, this.CONTAINER_ID)
+      this.makeHorizontalResizable(container, resizeHandleHorizontal, this.CONTAINER_ID)
 
       // 닫기 버튼 이벤트 설정
       closeButton.addEventListener('click', () => {
@@ -331,6 +372,10 @@ class CardManager {
     // 가시성 상태 확인 및 적용
     const isVisible = this.loadVisibilityState(this.CONTAINER_ID)
     container.style.display = isVisible ? 'block' : 'none'
+
+    // 투명도 적용
+    const opacity = this.getContainerOpacity(this.CONTAINER_ID)
+    container.style.opacity = opacity
 
     // 카드 컨테이너 초기화
     const cardsWrapper = container.querySelector('.hs-chzzk-cards-wrapper')
@@ -347,14 +392,6 @@ class CardManager {
       nameElement.className = 'hs-chzzk-card-name'
       nameElement.textContent = card.count > 1 ? `${card.name} (${card.count})` : card.name
 
-      // 비용 표시
-      if (card.cost !== undefined) {
-        const costElement = document.createElement('div')
-        costElement.className = 'hs-chzzk-card-cost'
-        costElement.textContent = card.cost
-        cardElement.appendChild(costElement)
-      }
-
       // 마우스 호버 시 전체 이미지 표시
       const fullImageElement = document.createElement('div')
       fullImageElement.className = 'hs-chzzk-full-image'
@@ -362,6 +399,14 @@ class CardManager {
 
       cardElement.appendChild(nameElement)
       cardElement.appendChild(fullImageElement)
+
+      // 비용 표시
+      if (card.cost !== undefined) {
+        const costElement = document.createElement('div')
+        costElement.className = 'hs-chzzk-card-cost'
+        costElement.textContent = card.cost
+        cardElement.appendChild(costElement)
+      }
 
       // 호버 이벤트 추가
       cardElement.addEventListener('mouseenter', event => {
@@ -374,6 +419,11 @@ class CardManager {
 
       cardsWrapper.appendChild(cardElement)
     })
+
+    // 저장된 카드 크기 상태 적용
+    if (this.isBigCard) {
+      container.classList.add('hs-chzzk-big-cards')
+    }
   }
 
   // 적 카드 표시 함수
@@ -410,6 +460,7 @@ class CardManager {
         if (savedSettings.top) container.style.top = savedSettings.top
         if (savedSettings.left) container.style.left = savedSettings.left
         if (savedSettings.height) container.style.height = savedSettings.height
+        if (savedSettings.width) container.style.width = savedSettings.width
       }
 
       // 문서에 컨테이너 추가
@@ -418,10 +469,12 @@ class CardManager {
       // 드래그 및 리사이즈 이벤트 설정
       const dragHandle = container.querySelector('.hs-chzzk-drag-handle')
       const resizeHandle = container.querySelector('.hs-chzzk-resize-handle')
+      // const resizeHandleHorizontal = container.querySelector('.hs-chzzk-resize-handle-horizontal')
       const closeButton = container.querySelector('.hs-chzzk-close-button')
 
       this.makeDraggableContainer(container, dragHandle, this.ENEMY_CONTAINER_ID)
       this.makeResizable(container, resizeHandle, this.ENEMY_CONTAINER_ID)
+      // this.makeHorizontalResizable(container, resizeHandleHorizontal, this.ENEMY_CONTAINER_ID)
 
       // 닫기 버튼 이벤트 설정
       closeButton.addEventListener('click', () => {
@@ -432,6 +485,10 @@ class CardManager {
     // 가시성 상태 확인 및 적용
     const isVisible = this.loadVisibilityState(this.ENEMY_CONTAINER_ID)
     container.style.display = isVisible ? 'block' : 'none'
+
+    // 투명도 적용
+    const opacity = this.getContainerOpacity(this.ENEMY_CONTAINER_ID)
+    container.style.opacity = opacity
 
     // 카드 컨테이너 초기화
     const cardsWrapper = container.querySelector('.hs-chzzk-cards-wrapper')
@@ -449,12 +506,6 @@ class CardManager {
       nameElement.textContent = card.count > 1 ? `${card.name} (${card.count})` : card.name
 
       // 비용 표시
-      if (card.cost !== undefined) {
-        const costElement = document.createElement('div')
-        costElement.className = 'hs-chzzk-card-cost'
-        costElement.textContent = card.cost
-        cardElement.appendChild(costElement)
-      }
 
       // 마우스 호버 시 전체 이미지 표시
       const fullImageElement = document.createElement('div')
@@ -463,6 +514,13 @@ class CardManager {
 
       cardElement.appendChild(nameElement)
       cardElement.appendChild(fullImageElement)
+
+      if (card.cost !== undefined) {
+        const costElement = document.createElement('div')
+        costElement.className = 'hs-chzzk-card-cost'
+        costElement.textContent = card.cost
+        cardElement.appendChild(costElement)
+      }
 
       // 호버 이벤트 추가
       cardElement.addEventListener('mouseenter', event => {
@@ -475,6 +533,11 @@ class CardManager {
 
       cardsWrapper.appendChild(cardElement)
     })
+
+    // 저장된 카드 크기 상태 적용
+    if (this.isBigCard) {
+      container.classList.add('hs-chzzk-big-cards')
+    }
   }
 
   // 컨테이너를 드래그 가능하게 만드는 함수
@@ -574,10 +637,123 @@ class CardManager {
           top: element.style.top < '10px' ? '10px' : element.style.top,
           left: element.style.left,
           height: element.style.height,
+          width: element.style.width,
         })
       }
     }
     resizeHandle.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'
+  }
+
+  // 요소의 가로 크기를 조절 가능하게 만드는 함수
+  static makeHorizontalResizable(element, resizeHandle, containerId) {
+    let startX, startWidth
+
+    resizeHandle.addEventListener('mousedown', function (e) {
+      e.preventDefault()
+      e.stopPropagation() // 이벤트 버블링 방지
+      CardManager.isDragging = true // 드래그 상태 표시
+      startX = e.clientX
+      startWidth = parseInt(document.defaultView.getComputedStyle(element).width, 10)
+
+      document.addEventListener('mousemove', resizeElement)
+      document.addEventListener('mouseup', stopResize)
+    })
+
+    function resizeElement(e) {
+      if (!CardManager.isDragging) return
+      e.preventDefault()
+      e.stopPropagation() // 이벤트 버블링 방지
+      const maxWidth = window.innerWidth * 0.95
+
+      // 플레이어 컨테이너는 오른쪽으로 드래그하면 커지고, 왼쪽으로 드래그하면 작아짐
+      let newWidth = Math.max(100, startWidth + (e.clientX - startX))
+      newWidth = Math.min(newWidth, maxWidth)
+      element.style.width = newWidth + 'px'
+      const enemyContainer = document.getElementById(CardManager.ENEMY_CONTAINER_ID)
+      if (enemyContainer) enemyContainer.style.width = element.style.width
+
+      // 컨텐츠 영역 크기 조정
+      const cardsWrapper = element.querySelector('.hs-chzzk-cards-wrapper')
+      if (cardsWrapper) {
+        cardsWrapper.style.width = '100%' // 부모 요소에 맞게 너비 설정
+      }
+    }
+
+    function stopResize(e) {
+      if (e) {
+        e.preventDefault()
+        e.stopPropagation() // 이벤트 버블링 방지
+      }
+      CardManager.isDragging = false // 드래그 상태 해제
+      document.removeEventListener('mousemove', resizeElement)
+      document.removeEventListener('mouseup', stopResize)
+
+      // 리사이즈 완료 후 설정 저장
+      if (containerId) {
+        CardManager.saveContainerSettings(containerId, {
+          top: element.style.top,
+          left: element.style.left,
+          height: element.style.height,
+          width: element.style.width,
+        })
+        const enemyContainer = document.getElementById(CardManager.ENEMY_CONTAINER_ID)
+        if (enemyContainer) {
+          CardManager.saveContainerSettings(CardManager.ENEMY_CONTAINER_ID, {
+            left: enemyContainer.style.left,
+            width: element.style.width,
+            height: enemyContainer.style.height,
+            top: enemyContainer.style.top,
+          })
+        }
+      }
+    }
+    resizeHandle.style.backgroundColor = 'rgba(0, 0, 0, 0.5)'
+  }
+
+  // 카드 크기 토글 함수
+  static toggleCardSize() {
+    this.isBigCard = !this.isBigCard
+    this.saveCardSizeState(this.isBigCard)
+
+    // 플레이어 카드 컨테이너
+    const playerContainer = document.getElementById(this.CONTAINER_ID)
+    if (playerContainer) {
+      if (this.isBigCard) {
+        playerContainer.classList.add('hs-chzzk-big-cards')
+      } else {
+        playerContainer.classList.remove('hs-chzzk-big-cards')
+      }
+    }
+
+    // 적 카드 컨테이너
+    const enemyContainer = document.getElementById(this.ENEMY_CONTAINER_ID)
+    if (enemyContainer) {
+      if (this.isBigCard) {
+        enemyContainer.classList.add('hs-chzzk-big-cards')
+      } else {
+        enemyContainer.classList.remove('hs-chzzk-big-cards')
+      }
+    }
+  }
+
+  // 카드 크기 상태 저장
+  static saveCardSizeState(isSmall) {
+    try {
+      localStorage.setItem('cardSizeState', JSON.stringify(isSmall))
+    } catch (error) {
+      console.error('카드 크기 상태 저장 중 오류 발생:', error)
+    }
+  }
+
+  // 카드 크기 상태 로드
+  static loadCardSizeState() {
+    try {
+      const savedState = localStorage.getItem('cardSizeState')
+      return savedState ? JSON.parse(savedState) : false
+    } catch (error) {
+      console.error('카드 크기 상태 로드 중 오류 발생:', error)
+      return false
+    }
   }
 }
 
