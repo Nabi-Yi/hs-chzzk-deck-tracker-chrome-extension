@@ -218,6 +218,12 @@ class CardManager {
     if (!window || !window.location) return
     const pathName = window.location.pathname
     const streamerId = pathName.split('/').pop()
+    // 스트리머 체크
+    if (streamerId === 'undefined' || !this.checkStreamerList(streamerId) || !this.checkCategory()) return
+
+    // 카드 창이 둘 다 꺼져있는 경우 실행하지 않음
+    if (!this.loadVisibilityState(this.CONTAINER_ID) && !this.loadVisibilityState(this.ENEMY_CONTAINER_ID)) return
+
     const url = `${this.baseUrl}/${streamerId}`
     const data = await this.fetchData(url)
 
