@@ -54,7 +54,7 @@ class CardManager {
     this.currentStreamerId = window.location.pathname.split('/').pop()
 
     if (this.checkStreamerList(this.currentStreamerId) && this.checkCategory()) {
-      this.displayCards()
+      this.displayPlayerCards()
       this.displayEnemyCards()
       this.startDataFetching()
     }
@@ -140,7 +140,7 @@ class CardManager {
       // 지원되는 스트리머인지 확인
       if (this.checkStreamerList(newStreamerId)) {
         // 지원되는 스트리머이고 카테고리가 하스스톤이면 카드 표시
-        this.displayCards()
+        this.displayPlayerCards()
         this.displayEnemyCards()
         this.startDataFetching()
       } else {
@@ -225,7 +225,7 @@ class CardManager {
       this.enemyCardList = data.enemyCardList || []
 
       // 화면 갱신
-      this.displayCards()
+      this.displayPlayerCards()
       this.displayEnemyCards()
     }
   }
@@ -267,7 +267,7 @@ class CardManager {
     } else {
       // 컨테이너가 없으면 표시
       if (containerId === this.CONTAINER_ID) {
-        this.displayCards()
+        this.displayPlayerCards()
       } else if (containerId === this.ENEMY_CONTAINER_ID) {
         this.displayEnemyCards()
       }
@@ -313,13 +313,13 @@ class CardManager {
     }
   }
 
-  // 카드 표시 함수
-  static displayCards() {
+  // 카드 표시 통합 함수
+  static displayCardList(cards, containerId, containerTemplate, containerTitle) {
     // 중복 제거 및 카운트 추가
     const cardMap = new Map()
 
     // 카드 이름으로 그룹화하여 카운트
-    this.playerCardList.forEach(card => {
+    cards.forEach(card => {
       if (cardMap.has(card.name)) {
         const existingCard = cardMap.get(card.name)
         existingCard.count = (existingCard.count || 1) + 1
@@ -333,16 +333,16 @@ class CardManager {
     const uniqueCards = Array.from(cardMap.values())
 
     // 컨테이너 생성 또는 가져오기
-    let container = document.getElementById(this.CONTAINER_ID)
+    let container = document.getElementById(containerId)
 
     if (!container) {
       // 컨테이너가 없으면 템플릿으로 생성
       const template = document.createElement('template')
-      template.innerHTML = this.CONTAINER_TEMPLATE.trim()
+      template.innerHTML = containerTemplate.trim()
       container = template.content.firstChild
 
       // 저장된 설정 불러오기
-      const savedSettings = this.loadContainerSettings(this.CONTAINER_ID)
+      const savedSettings = this.loadContainerSettings(containerId)
       if (savedSettings) {
         if (savedSettings.top) container.style.top = savedSettings.top
         if (savedSettings.left) container.style.left = savedSettings.left
@@ -359,22 +359,26 @@ class CardManager {
       const resizeHandleHorizontal = container.querySelector('.hs-chzzk-resize-handle-horizontal')
       const closeButton = container.querySelector('.hs-chzzk-close-button')
 
-      this.makeDraggableContainer(container, dragHandle, this.CONTAINER_ID)
-      this.makeResizable(container, resizeHandle, this.CONTAINER_ID)
-      this.makeHorizontalResizable(container, resizeHandleHorizontal, this.CONTAINER_ID)
+      this.makeDraggableContainer(container, dragHandle, containerId)
+      this.makeResizable(container, resizeHandle, containerId)
+
+      // 가로 리사이즈는 플레이어 컨테이너일 경우에만 적용
+      if (containerId === this.CONTAINER_ID && resizeHandleHorizontal) {
+        this.makeHorizontalResizable(container, resizeHandleHorizontal, containerId)
+      }
 
       // 닫기 버튼 이벤트 설정
       closeButton.addEventListener('click', () => {
-        this.toggleContainer(this.CONTAINER_ID)
+        this.toggleContainer(containerId)
       })
     }
 
     // 가시성 상태 확인 및 적용
-    const isVisible = this.loadVisibilityState(this.CONTAINER_ID)
+    const isVisible = this.loadVisibilityState(containerId)
     container.style.display = isVisible ? 'block' : 'none'
 
     // 투명도 적용
-    const opacity = this.getContainerOpacity(this.CONTAINER_ID)
+    const opacity = this.getContainerOpacity(containerId)
     container.style.opacity = opacity
 
     // 카드 컨테이너 초기화
@@ -426,118 +430,16 @@ class CardManager {
     }
   }
 
+  // 카드 표시 함수
+  static displayPlayerCards() {
+    // 통합 함수 호출
+    this.displayCardList(this.playerCardList, this.CONTAINER_ID, this.CONTAINER_TEMPLATE, '내 카드 목록')
+  }
+
   // 적 카드 표시 함수
   static displayEnemyCards() {
-    // 중복 제거 및 카운트 추가
-    const cardMap = new Map()
-
-    // 카드 이름으로 그룹화하여 카운트
-    this.enemyCardList.forEach(card => {
-      if (cardMap.has(card.name)) {
-        const existingCard = cardMap.get(card.name)
-        existingCard.count = (existingCard.count || 1) + 1
-      } else {
-        const cardCopy = { ...card, count: 1 }
-        cardMap.set(card.name, cardCopy)
-      }
-    })
-
-    // Map에서 배열로 변환
-    const uniqueCards = Array.from(cardMap.values())
-
-    // 컨테이너 생성 또는 가져오기
-    let container = document.getElementById(this.ENEMY_CONTAINER_ID)
-
-    if (!container) {
-      // 컨테이너가 없으면 템플릿으로 생성
-      const template = document.createElement('template')
-      template.innerHTML = this.ENEMY_CONTAINER_TEMPLATE.trim()
-      container = template.content.firstChild
-
-      // 저장된 설정 불러오기
-      const savedSettings = this.loadContainerSettings(this.ENEMY_CONTAINER_ID)
-      if (savedSettings) {
-        if (savedSettings.top) container.style.top = savedSettings.top
-        if (savedSettings.left) container.style.left = savedSettings.left
-        if (savedSettings.height) container.style.height = savedSettings.height
-        if (savedSettings.width) container.style.width = savedSettings.width
-      }
-
-      // 문서에 컨테이너 추가
-      document.body.appendChild(container)
-
-      // 드래그 및 리사이즈 이벤트 설정
-      const dragHandle = container.querySelector('.hs-chzzk-drag-handle')
-      const resizeHandle = container.querySelector('.hs-chzzk-resize-handle')
-      // const resizeHandleHorizontal = container.querySelector('.hs-chzzk-resize-handle-horizontal')
-      const closeButton = container.querySelector('.hs-chzzk-close-button')
-
-      this.makeDraggableContainer(container, dragHandle, this.ENEMY_CONTAINER_ID)
-      this.makeResizable(container, resizeHandle, this.ENEMY_CONTAINER_ID)
-      // this.makeHorizontalResizable(container, resizeHandleHorizontal, this.ENEMY_CONTAINER_ID)
-
-      // 닫기 버튼 이벤트 설정
-      closeButton.addEventListener('click', () => {
-        this.toggleContainer(this.ENEMY_CONTAINER_ID)
-      })
-    }
-
-    // 가시성 상태 확인 및 적용
-    const isVisible = this.loadVisibilityState(this.ENEMY_CONTAINER_ID)
-    container.style.display = isVisible ? 'block' : 'none'
-
-    // 투명도 적용
-    const opacity = this.getContainerOpacity(this.ENEMY_CONTAINER_ID)
-    container.style.opacity = opacity
-
-    // 카드 컨테이너 초기화
-    const cardsWrapper = container.querySelector('.hs-chzzk-cards-wrapper')
-    cardsWrapper.innerHTML = ''
-
-    // 카드 엘리먼트 생성 및 추가
-    uniqueCards.forEach(card => {
-      const cardElement = document.createElement('div')
-      cardElement.className = 'hs-chzzk-card-element'
-      cardElement.style.backgroundImage = `url(${card.thumbnail || ''})`
-
-      // 카드 이름 표시
-      const nameElement = document.createElement('div')
-      nameElement.className = 'hs-chzzk-card-name'
-      nameElement.textContent = card.count > 1 ? `${card.name} (${card.count})` : card.name
-
-      // 비용 표시
-
-      // 마우스 호버 시 전체 이미지 표시
-      const fullImageElement = document.createElement('div')
-      fullImageElement.className = 'hs-chzzk-full-image'
-      fullImageElement.style.backgroundImage = `url(${card.image})`
-
-      cardElement.appendChild(nameElement)
-      cardElement.appendChild(fullImageElement)
-
-      if (card.cost !== undefined) {
-        const costElement = document.createElement('div')
-        costElement.className = 'hs-chzzk-card-cost'
-        costElement.textContent = card.cost
-        cardElement.appendChild(costElement)
-      }
-
-      // 호버 이벤트 추가
-      cardElement.addEventListener('mouseenter', event => {
-        fullImageElement.style.display = 'block'
-      })
-
-      cardElement.addEventListener('mouseleave', () => {
-        fullImageElement.style.display = 'none'
-      })
-
-      cardsWrapper.appendChild(cardElement)
-    })
-
-    // 저장된 카드 크기 상태 적용
-    if (this.isBigCard) {
-      container.classList.add('hs-chzzk-big-cards')
-    }
+    // 통합 함수 호출
+    this.displayCardList(this.enemyCardList, this.ENEMY_CONTAINER_ID, this.ENEMY_CONTAINER_TEMPLATE, '상대방 카드 목록')
   }
 
   // 컨테이너를 드래그 가능하게 만드는 함수
