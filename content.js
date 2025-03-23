@@ -8,6 +8,8 @@ class CardManager {
   static baseUrl = 'https://hs-chzzk-deck-tracker-server.vercel.app/api/deckTrace'
   static playerCardList = []
   static enemyCardList = []
+  static currentPlayerCardList = []
+  static currentEnemyCardList = []
   static currentStreamerId = ''
   static streamerList = []
   static autoFetcherId = null
@@ -314,23 +316,8 @@ class CardManager {
   }
 
   // 카드 표시 통합 함수
-  static displayCardList(cards, containerId, containerTemplate, containerTitle) {
-    // 중복 제거 및 카운트 추가
-    const cardMap = new Map()
-
-    // 카드 이름으로 그룹화하여 카운트
-    cards.forEach(card => {
-      if (cardMap.has(card.name)) {
-        const existingCard = cardMap.get(card.name)
-        existingCard.count = (existingCard.count || 1) + 1
-      } else {
-        const cardCopy = { ...card, count: 1 }
-        cardMap.set(card.name, cardCopy)
-      }
-    })
-
+  static displayCardList(newCards, currentCards, containerId, containerTemplate) {
     // Map에서 배열로 변환
-    const uniqueCards = Array.from(cardMap.values())
 
     // 컨테이너 생성 또는 가져오기
     let container = document.getElementById(containerId)
@@ -381,15 +368,25 @@ class CardManager {
     const opacity = this.getContainerOpacity(containerId)
     container.style.opacity = opacity
 
-    // 카드 컨테이너 초기화
-    const cardsWrapper = container.querySelector('.hs-chzzk-cards-wrapper')
-    cardsWrapper.innerHTML = ''
+    // 카드 컨테이너 가져오기
+    let cardsWrapper = container.querySelector('.hs-chzzk-cards-wrapper')
+    const isNewGameStarted = newCards.length < currentCards.length
+    if (isNewGameStarted) {
+      cardsWrapper.innerHTML = ''
+    }
 
-    // 카드 엘리먼트 생성 및 추가
-    uniqueCards.forEach(card => {
+    // 현재 표시된 카드 이름 목록 생성
+    const currentCardNames = Array.from(currentCards).map(card => card.name)
+
+    // 새로운 카드만 필터링
+    const newCardsToAdd = isNewGameStarted ? newCards : newCards.filter(card => !currentCardNames.includes(card.name))
+
+    // 새로운 카드가 있을 경우에만 추가
+    newCardsToAdd.forEach(card => {
       const cardElement = document.createElement('div')
       cardElement.className = 'hs-chzzk-card-element'
       cardElement.style.backgroundImage = `url(${card.thumbnail || ''})`
+      cardElement.dataset.cardName = card.name // 카드 이름 데이터 속성 추가
 
       // 카드 이름 표시
       const nameElement = document.createElement('div')
@@ -424,6 +421,13 @@ class CardManager {
       cardsWrapper.appendChild(cardElement)
     })
 
+    // 현재 카드 목록 업데이트
+    if (containerId === this.CONTAINER_ID) {
+      this.currentPlayerCardList = Array.from(newCards)
+    } else if (containerId === this.ENEMY_CONTAINER_ID) {
+      this.currentEnemyCardList = Array.from(newCards)
+    }
+
     // 저장된 카드 크기 상태 적용
     if (this.isBigCard) {
       container.classList.add('hs-chzzk-big-cards')
@@ -433,13 +437,18 @@ class CardManager {
   // 카드 표시 함수
   static displayPlayerCards() {
     // 통합 함수 호출
-    this.displayCardList(this.playerCardList, this.CONTAINER_ID, this.CONTAINER_TEMPLATE, '내 카드 목록')
+    this.displayCardList(this.playerCardList, this.currentPlayerCardList, this.CONTAINER_ID, this.CONTAINER_TEMPLATE)
   }
 
   // 적 카드 표시 함수
   static displayEnemyCards() {
     // 통합 함수 호출
-    this.displayCardList(this.enemyCardList, this.ENEMY_CONTAINER_ID, this.ENEMY_CONTAINER_TEMPLATE, '상대방 카드 목록')
+    this.displayCardList(
+      this.enemyCardList,
+      this.currentEnemyCardList,
+      this.ENEMY_CONTAINER_ID,
+      this.ENEMY_CONTAINER_TEMPLATE,
+    )
   }
 
   // 컨테이너를 드래그 가능하게 만드는 함수
