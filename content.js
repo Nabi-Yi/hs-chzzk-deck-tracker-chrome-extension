@@ -203,7 +203,7 @@ class CardManager {
     // 5초마다 반복 실행
     this.autoFetcherId = setInterval(() => {
       this.updateCardData()
-    }, 5000)
+    }, 5500)
   }
 
   static stopDataFetching() {
